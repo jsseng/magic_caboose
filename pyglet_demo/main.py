@@ -58,7 +58,7 @@ def main():
     def on_mouse_press(x, y, button, modifiers):
         game_app.on_click(x, y, button)
     
-    inputHandler = cameraInput.Input(game_app.spin)
+    inputHandler = cameraInput.Input(game_app.spin, net, input, output, args)
 
     def update_all(deltaTime):
         inputHandler.update()

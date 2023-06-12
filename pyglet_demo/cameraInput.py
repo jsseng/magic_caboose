@@ -36,6 +36,8 @@ class Input:
                 right_elbow = pose.Keypoints[right_elbow_idx]
 
                 #check if y value is above a certain point? if yes set threshold over 1
+                if left_elbow.y > 20 or right_elbow.y > 20:
+                    threshold = 1.1
 
             # render the image
             self.output.Render(img)
@@ -47,7 +49,7 @@ class Input:
             self.net.PrintProfilerTimes()
 
             # exit on input/output EOS
-            if not input.IsStreaming() or not self.output.IsStreaming():
+            if not self.input.IsStreaming() or not self.output.IsStreaming():
                 break
 
         if threshold > 1:
