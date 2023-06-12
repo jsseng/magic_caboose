@@ -1,4 +1,4 @@
-import time
+from time import sleep
 
 class Input:
     def __init__(self, on_trigger, net, input, output, args):
@@ -25,19 +25,21 @@ class Input:
             print("detected {:d} objects in image".format(len(poses)))
 
             for pose in poses:
-                right_elbow_idx = pose.FindKeypoint('right_elbow')
-                left_elbow_idx = pose.FindKeypoint('left_elbow')
+                right_wrist_idx = pose.FindKeypoint('right_wrist')
+                left_wrist_idx = pose.FindKeypoint('left_wrist')
 
                 # if the keypoint index is < 0, it means it wasn't found in the image
-                if right_elbow_idx < 0 or left_elbow_idx < 0:
+                if right_wrist_idx < 0 or left_wrist_idx < 0:
                     continue
                 
-                left_elbow = pose.Keypoints[left_elbow_idx]
-                right_elbow = pose.Keypoints[right_elbow_idx]
+                left_wrist = pose.Keypoints[left_wrist_idx]
+                right_wrist = pose.Keypoints[right_wrist_idx]
 
                 #check if y value is above a certain point? if yes set threshold over 1
-                if left_elbow.y > 20 or right_elbow.y > 20:
-                    threshold = 1.1
+                if left_wrist.y > 20 or right_wrist.y > 20:
+                    threshold = 2
+                else:
+                    threshold = 0
 
             # render the image
             self.output.Render(img)
