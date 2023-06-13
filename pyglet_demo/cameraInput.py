@@ -54,5 +54,5 @@ class Input:
             if not self.input.IsStreaming() or not self.output.IsStreaming():
                 break
 
-        if threshold > 1:
-            self.on_trigger()
+            if threshold > 1:
+                self.on_trigger()
