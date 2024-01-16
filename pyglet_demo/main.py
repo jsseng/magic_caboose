@@ -5,23 +5,31 @@ from socket import gethostname
 
 from threading import Timer
 
+from magic_caboose import MagicCaboose
+from default_app import DefaultApp
+from serial_controller_input import ControllerEvent, ControllerInput
 
-import configs
-import app
-import serialInput
+BACKGROUND_COLOR = (150, 200, 250)
 
 
 def main():
-    gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
-
     config = pyglet.gl.Config(sample_buffers=1, samples=8, double_buffer=True)
     window = pyglet.window.Window(
         caption="Caboose Wheel", config=config, fullscreen=True
     )
-    pyglet.gl.glClearColor(*gl_background_color, 1.0)
     pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
 
-    game_app = app.App((window.width, window.height))
+    cur_game_idx = 0
+    games = [
+        DefaultApp((window.width, window.height)),
+        MagicCaboose((window.width, window.height)),
+    ]
+
+    game_app = games[cur_game_idx]
+    game_app.on_startup()
+
+    # game_app = MagicCaboose((window.width, window.height))
+    # game_app = DefaultApp((window.width, window.height))s
 
     shut_down_timer = None
 
@@ -37,6 +45,11 @@ def main():
         color=(255, 0, 0, 255),
     )
 
+    def handle_game_change(new_game: DefaultApp):
+        nonlocal game_app
+        game_app = new_game
+        new_game.on_startup()
+
     @window.event
     def on_draw():
         pyglet.gl.glFlush()
@@ -48,10 +61,13 @@ def main():
 
     @window.event
     def on_mouse_press(x, y, button, modifiers):
+        nonlocal cur_game_idx, game_app
         if button == 2:
             handle_shutdown()
         elif button == 4:
-            pyglet.app.exit()
+            cur_game_idx = (cur_game_idx + 1) % len(games)
+            handle_game_change(games[cur_game_idx])
+            # pyglet.app.exit()
         else:
             game_app.on_click(x, y, button)
 
@@ -64,13 +80,24 @@ def main():
             shut_down_timer = Timer(10, lambda: system("shutdown now"))
             shut_down_timer.start()
 
+    def handle_controller_event(event):
+        event_handlers_dict = {
+            ControllerEvent.GREEN_HOLD: pyglet.app.exit,
+            ControllerEvent.RED_HOLD: handle_shutdown,
+            ControllerEvent.RED_CLICK: lambda: handle_shutdown(
+                cancel_shutdown_only=True
+            ),
+        }
+        if event in event_handlers_dict:
+            # some events are handled at top level
+            event_handlers_dict[event]()
+        else:
+            game_app.on_controller_event(event)
+
     # dev board will need to be changed. not sure of the name in debian
     if platform != "darwin" and gethostname() == "ubuntu":
-        serialInputHandler = serialInput.Input(
-            on_green_trigger=game_app.spin,
-            on_red_trigger=lambda: handle_shutdown(cancel_shutdown_only=True),
-            on_green_hold=pyglet.app.exit,
-            on_red_hold=handle_shutdown,
+        serialInputHandler = ControllerInput(
+            on_controller_event=handle_controller_event
         )
     else:
         serialInputHandler = None

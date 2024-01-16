@@ -3,10 +3,15 @@ import math
 import os
 import pathlib
 
-import color_utils
-import configs
+
+from . import color_utils
+from . import configs
 from typing import Tuple
 import random
+
+from serial_controller_input import ControllerEvent
+
+from default_app import DefaultApp
 
 # Physics values
 SPIN_SPEED = 0.04
@@ -21,7 +26,7 @@ MID_RADIUS = (INNER_RADIUS + OUTER_RADIUS) / 2
 CULLING_THRESHOLD = 0.3
 
 
-class App:
+class App(DefaultApp):
     def __init__(self, window_size: Tuple[int, int]):
         self.wheel_batch = pyglet.graphics.Batch()
         self.window_size = window_size
@@ -40,7 +45,8 @@ class App:
         image_files = sorted(image_files)
 
         images = [
-            pyglet.resource.image(f"images/{image_file}") for image_file in image_files
+            pyglet.resource.image(f"magic_caboose/images/{image_file}")
+            for image_file in image_files
         ]
 
         ordered_image_indexes = self.order_images(images)
@@ -73,7 +79,7 @@ class App:
             sprite = pyglet.sprite.Sprite(image)
 
             self.audio_file_name.append(
-                f"sounds/{image_files[i].replace('.png', '.wav')}"
+                f"magic_caboose/sounds/{image_files[i].replace('.png', '.wav')}"
             )
 
             sprite.scale = 0.4
@@ -112,7 +118,7 @@ class App:
         self.wheel_position = 0
         self.prev_segment = 0
 
-        self.audio = pyglet.resource.media("sounds/click4.wav")
+        self.audio = pyglet.resource.media("magic_caboose/sounds/click4.wav")
         self.player = None
         self.player2 = None
 
@@ -127,6 +133,10 @@ class App:
             anchor_y="bottom",
             color=(0, 0, 0, 255),
         )
+
+    def on_startup(self):
+        gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
+        pyglet.gl.glClearColor(*gl_background_color, 1.0)
 
     def check_position(self, image, x, y):
         img_data = image.get_region(x, y, 1, 1).get_image_data()
@@ -194,6 +204,13 @@ class App:
 
     def on_click(self, x, y, button):
         self.spin()
+
+    def on_controller_event(self, event):
+        event_handlers_dict = {
+            ControllerEvent.GREEN_CLICK: self.spin,
+        }
+        if event in event_handlers_dict:
+            event_handlers_dict[event]()
 
     def spin(self):
         if self.wheel_velocity == 0:
