@@ -207,7 +207,7 @@ class App(DefaultApp):
 
     def on_controller_event(self, event):
         event_handlers_dict = {
-            ControllerEvent.GREEN_CLICK: self.spin,
+            ControllerEvent.GREEN_SINGLE_CLICK: self.spin,
         }
         if event in event_handlers_dict:
             event_handlers_dict[event]()

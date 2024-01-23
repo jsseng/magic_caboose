@@ -82,9 +82,9 @@ def main():
 
     def handle_controller_event(event):
         event_handlers_dict = {
-            ControllerEvent.GREEN_HOLD: pyglet.app.exit,
-            ControllerEvent.RED_HOLD: handle_shutdown,
-            ControllerEvent.RED_CLICK: lambda: handle_shutdown(
+            ControllerEvent.GREEN_SINGLE_LONG_CLICK: pyglet.app.exit,
+            ControllerEvent.RED_SINGLE_LONG_CLICK: handle_shutdown,
+            ControllerEvent.RED_SINGLE_CLICK: lambda: handle_shutdown(
                 cancel_shutdown_only=True
             ),
         }
