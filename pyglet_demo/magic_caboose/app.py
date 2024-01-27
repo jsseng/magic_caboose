@@ -17,6 +17,8 @@ from default_app import DefaultApp
 SPIN_SPEED = 0.04
 CONSTANT_FRICTION = 0.004
 LINEAR_FRICTION = 0.003
+MIN_SPEED = 1.2
+SPEED_RANGE = 0.6
 
 # Wheel shape values
 Y_OFFSET = -600
@@ -125,7 +127,7 @@ class App(DefaultApp):
         self.label = pyglet.text.Label(
             "",
             font_name="Arial",
-            font_size=128,
+            font_size=150,
             x=window_size[0] // 2,
             y=20,
             anchor_x="center",
@@ -214,7 +216,9 @@ class App(DefaultApp):
 
     def spin(self):
         if self.wheel_velocity == 0:
-            rand = random.random() * 0.5 + 0.75  # random num between 0.5 and 1
+            rand = (
+                random.random() * SPEED_RANGE + MIN_SPEED
+            )  # random num between 0.5 and 1
             self.wheel_velocity = SPIN_SPEED * rand
             self.player2 = None
             self.label.text = ""
