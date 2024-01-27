@@ -50,6 +50,11 @@ def main():
         game_app = new_game
         new_game.on_startup()
 
+    def handle_next_game():
+        nonlocal cur_game_idx
+        cur_game_idx = (cur_game_idx + 1) % len(games)
+        handle_game_change(games[cur_game_idx])
+
     @window.event
     def on_draw():
         pyglet.gl.glFlush()
@@ -65,8 +70,9 @@ def main():
         if button == 2:
             handle_shutdown()
         elif button == 4:
-            cur_game_idx = (cur_game_idx + 1) % len(games)
-            handle_game_change(games[cur_game_idx])
+            handle_next_game()
+            # cur_game_idx = (cur_game_idx + 1) % len(games)
+            # handle_game_change(games[cur_game_idx])
             # pyglet.app.exit()
         else:
             game_app.on_click(x, y, button)
@@ -87,6 +93,7 @@ def main():
             ControllerEvent.RED_SINGLE_CLICK: lambda: handle_shutdown(
                 cancel_shutdown_only=True
             ),
+            ControllerEvent.RED_DOUBLE_CLICK: handle_next_game,
         }
         if event in event_handlers_dict:
             # some events are handled at top level
