@@ -11,7 +11,7 @@ import random
 
 from serial_controller_input import ControllerEvent
 
-from default_app import DefaultApp
+from default_pyglet_app import DefaultPygletApp
 
 # Physics values
 SPIN_SPEED = 0.04
@@ -28,9 +28,15 @@ MID_RADIUS = (INNER_RADIUS + OUTER_RADIUS) / 2
 CULLING_THRESHOLD = 0.3
 
 
-class App(DefaultApp):
-    def __init__(self, window_size: Tuple[int, int]):
+class App(DefaultPygletApp):
+    def __init__(self, *args, **kwargs):
+        self.ready = False
+        super().__init__(caption="Magic Caboose")
+        gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
+        pyglet.gl.glClearColor(*gl_background_color, 1.0)
+
         self.wheel_batch = pyglet.graphics.Batch()
+        window_size = (self.width, self.height)
         self.window_size = window_size
 
         image_files = os.listdir(
@@ -87,6 +93,7 @@ class App(DefaultApp):
             sprite.scale = 0.4
 
             self.arcs.append((sector, sprite))
+            self.ready = True
 
         # Create center circle cutout.
         self.background_circle = pyglet.shapes.Circle(
@@ -136,10 +143,6 @@ class App(DefaultApp):
             color=(0, 0, 0, 255),
         )
 
-    def on_startup(self):
-        gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
-        pyglet.gl.glClearColor(*gl_background_color, 1.0)
-
     def check_position(self, image, x, y):
         img_data = image.get_region(x, y, 1, 1).get_image_data()
         width = img_data.width
@@ -179,6 +182,10 @@ class App(DefaultApp):
         return ordered_images
 
     def on_draw(self):
+        pyglet.gl.glFlush()
+        self.clear()
+        if not self.ready:
+            return
         # self.wheel_batch.draw()
         for sector, sprite in self.arcs:
             angle_val = (self.angle_offset + sector.start_angle) % math.tau
@@ -204,7 +211,7 @@ class App(DefaultApp):
         self.label.draw()
         self.arrow_batch.draw()
 
-    def on_click(self, x, y, button):
+    def on_mouse_press(self, x, y, button, modifiers):
         self.spin()
 
     def on_controller_event(self, event):

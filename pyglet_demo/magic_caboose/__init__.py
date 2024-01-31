@@ -1,1 +1,1 @@
-from magic_caboose.app import App as MagicCaboose
+from magic_caboose.magic_caboose import App as MagicCaboose
