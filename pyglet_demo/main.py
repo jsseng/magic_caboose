@@ -7,6 +7,7 @@ from threading import Timer
 
 from magic_caboose import MagicCaboose
 from default_app import DefaultApp
+from game_selector import GameSelector
 from serial_controller_input import ControllerEvent, ControllerInput
 
 BACKGROUND_COLOR = (150, 200, 250)
@@ -20,16 +21,14 @@ def main():
     pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
 
     cur_game_idx = 0
-    games = [
+    apps = [
+        GameSelector((window.width, window.height), [], None),
         DefaultApp((window.width, window.height)),
         MagicCaboose((window.width, window.height)),
     ]
 
-    game_app = games[cur_game_idx]
-    game_app.on_startup()
-
-    # game_app = MagicCaboose((window.width, window.height))
-    # game_app = DefaultApp((window.width, window.height))s
+    cur_app = apps[cur_game_idx]
+    cur_app.on_startup()
 
     shut_down_timer = None
 
@@ -45,37 +44,37 @@ def main():
         color=(255, 0, 0, 255),
     )
 
-    def handle_game_change(new_game: DefaultApp):
-        nonlocal game_app
-        game_app = new_game
+    def handle_app_change(new_game: DefaultApp):
+        nonlocal cur_app
+        cur_app = new_game
         new_game.on_startup()
 
-    def handle_next_game():
+    def handle_next_app():
         nonlocal cur_game_idx
-        cur_game_idx = (cur_game_idx + 1) % len(games)
-        handle_game_change(games[cur_game_idx])
+        cur_game_idx = (cur_game_idx + 1) % len(apps)
+        handle_app_change(apps[cur_game_idx])
 
     @window.event
     def on_draw():
         pyglet.gl.glFlush()
         window.clear()
 
-        game_app.on_draw()
+        cur_app.on_draw()
         if shut_down_timer is not None:
             shutdown_label.draw()
 
     @window.event
     def on_mouse_press(x, y, button, modifiers):
-        nonlocal cur_game_idx, game_app
+        nonlocal cur_game_idx, cur_app
         if button == 2:
             handle_shutdown()
         elif button == 4:
-            handle_next_game()
+            handle_next_app()
             # cur_game_idx = (cur_game_idx + 1) % len(games)
             # handle_game_change(games[cur_game_idx])
             # pyglet.app.exit()
         else:
-            game_app.on_click(x, y, button)
+            cur_app.on_click(x, y, button)
 
     def handle_shutdown(cancel_shutdown_only=False):
         nonlocal shut_down_timer
@@ -93,13 +92,13 @@ def main():
             ControllerEvent.RED_SINGLE_CLICK: lambda: handle_shutdown(
                 cancel_shutdown_only=True
             ),
-            ControllerEvent.RED_DOUBLE_CLICK: handle_next_game,
+            ControllerEvent.RED_DOUBLE_CLICK: handle_next_app,
         }
         if event in event_handlers_dict:
             # some events are handled at top level
             event_handlers_dict[event]()
         else:
-            game_app.on_controller_event(event)
+            cur_app.on_controller_event(event)
 
     # dev board will need to be changed. not sure of the name in debian
     if platform != "darwin" and gethostname() == "ubuntu":
@@ -112,7 +111,7 @@ def main():
     def update_all(deltaTime):
         if serialInputHandler is not None:
             serialInputHandler.update()
-        game_app.on_update(deltaTime)
+        cur_app.on_update(deltaTime)
 
     pyglet.clock.schedule_interval(update_all, 1 / 60)
     pyglet.app.run()
