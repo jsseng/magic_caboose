@@ -29,9 +29,10 @@ CULLING_THRESHOLD = 0.3
 
 
 class App(DefaultPygletApp):
+    name = "Magic Caboose"
+
     def __init__(self, *args, **kwargs):
-        self.ready = False
-        super().__init__(caption="Magic Caboose")
+        super().__init__(caption="Magic Caboose", *args, **kwargs)
         gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
         pyglet.gl.glClearColor(*gl_background_color, 1.0)
 
@@ -93,7 +94,6 @@ class App(DefaultPygletApp):
             sprite.scale = 0.4
 
             self.arcs.append((sector, sprite))
-            self.ready = True
 
         # Create center circle cutout.
         self.background_circle = pyglet.shapes.Circle(
@@ -184,8 +184,6 @@ class App(DefaultPygletApp):
     def on_draw(self):
         pyglet.gl.glFlush()
         self.clear()
-        if not self.ready:
-            return
         # self.wheel_batch.draw()
         for sector, sprite in self.arcs:
             angle_val = (self.angle_offset + sector.start_angle) % math.tau
@@ -212,6 +210,7 @@ class App(DefaultPygletApp):
         self.arrow_batch.draw()
 
     def on_mouse_press(self, x, y, button, modifiers):
+        super().on_mouse_press(x, y, button, modifiers)
         self.spin()
 
     def on_controller_event(self, event):

@@ -7,34 +7,26 @@ from threading import Timer
 
 from magic_caboose import MagicCaboose
 from example_app import ExampleApp
+from default_app import DefaultApp
 
 # from default_app import DefaultApp
 # from game_selector import GameSelector
 from app_selector import AppSelector
 from serial_controller_input import ControllerEvent, ControllerInput
+from typing import Optional
 
 BACKGROUND_COLOR = (150, 200, 250)
+
+APPS = [MagicCaboose, ExampleApp]
+
+
+import gc
 
 
 def main():
     def handle_serial_update():
         if serial_input_handler is not None:
             serial_input_handler.update()
-
-    # cur_app = AppSelector(
-    #     [], lambda: print("nothing"), update_handlers=[handle_serial_update]
-    # )
-    cur_app = MagicCaboose(update_handlers=[handle_serial_update])
-    # cur_app = ExampleApp(update_handlers=[handle_serial_update])
-
-    # def handle_shutdown(cancel_shutdown_only=False):
-    #     nonlocal shut_down_timer
-    #     if shut_down_timer is not None:
-    #         shut_down_timer.cancel()
-    #         shut_down_timer = None
-    #     elif not cancel_shutdown_only:
-    #         shut_down_timer = Timer(10, lambda: system("shutdown now"))
-    #         shut_down_timer.start()
 
     def handle_controller_event(event):
         event_handlers_dict = {
@@ -54,8 +46,37 @@ def main():
         )
     else:
         serial_input_handler = None
+    # import time
 
-    cur_app.start()
+    def open_app(app_class):
+        nonlocal next_app_class
+        next_app_class = app_class
+
+    next_app_class = AppSelector
+    cur_app = None
+
+    while next_app_class is not None:
+        gc.collect()
+        if next_app_class == AppSelector:
+            cur_app = next_app_class(
+                APPS, open_app, update_handlers=[handle_serial_update]
+            )
+            next_app_class = AppSelector
+        else:
+            cur_app = next_app_class(update_handlers=[handle_serial_update])
+            next_app_class = AppSelector
+        cur_app.start()
+
+    # def handle_shutdown(cancel_shutdown_only=False):
+    #     nonlocal shut_down_timer
+    #     if shut_down_timer is not None:
+    #         shut_down_timer.cancel()
+    #         shut_down_timer = None
+    #     elif not cancel_shutdown_only:
+    #         shut_down_timer = Timer(10, lambda: system("shutdown now"))
+    #         shut_down_timer.start()
+
+    # cur_app.start()
 
 
 if __name__ == "__main__":

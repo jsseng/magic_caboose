@@ -4,6 +4,8 @@ import pyglet
 
 
 class App(DefaultPygletApp):
+    name = "App Selector"
+
     def __init__(self, apps, open_app, *args, **kwargs):
         super().__init__(caption="Game Selector", *args, **kwargs)
         gl_background_color = tuple(map(lambda x: x / 255.0, (0, 0, 0)))
@@ -22,13 +24,13 @@ class App(DefaultPygletApp):
         button_width, button_height = 400, 100
         self.buttons = [
             self.create_button(
-                "Mode 1",
+                self.apps[0].name,
                 (self.width // 2, self.height // 2 + 75),
                 button_width,
                 button_height,
             ),
             self.create_button(
-                "Mode 2",
+                self.apps[1].name,
                 (self.width // 2, self.height // 2 - 75),
                 button_width,
                 button_height,
@@ -104,11 +106,9 @@ class App(DefaultPygletApp):
 
     def on_enter(self):
         if self.selected_mode is not None:
-            print(f"Selected Game Mode: Mode {self.selected_mode + 1}")
-            # self.close()  # Close the current window
-            # new_window = GameModeSelector(400, 300, resizable=True)  # Create a new window
-            # pyglet.app.exit()  # Exit the current Pyglet application
-            # pyglet.app.run()  # Start the new Pyglet application
+            print(f"Selected Game Mode: Mode {self.apps[self.selected_mode]}")
+            self.open_app(self.apps[self.selected_mode])
+            self.exit()
 
     def on_draw(self):
         pyglet.gl.glFlush()
