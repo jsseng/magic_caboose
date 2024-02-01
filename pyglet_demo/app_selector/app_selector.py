@@ -1,17 +1,23 @@
-from default_pyglet_app import DefaultPygletApp
-from serial_controller_input import ControllerEvent
 import pyglet
+import sys
+import pathlib
+from threading import Timer
+from os import system
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
+from serial_controller_input import ControllerEvent, ControllerInput  # noqa: E402
 
 
-class App(DefaultPygletApp):
+class App(pyglet.window.Window):
     name = "App Selector"
 
-    def __init__(self, apps, open_app, *args, **kwargs):
-        super().__init__(caption="Game Selector", *args, **kwargs)
+    def __init__(self, apps, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
+        self.controller_input = ControllerInput(self.on_controller_event)
         gl_background_color = tuple(map(lambda x: x / 255.0, (0, 0, 0)))
         pyglet.gl.glClearColor(*gl_background_color, 1.0)
         self.apps = apps
-        self.open_app = open_app
         self.label = pyglet.text.Label(
             "Select a Game",
             font_name="Arial",
@@ -24,20 +30,20 @@ class App(DefaultPygletApp):
         button_width, button_height = 400, 100
         self.buttons = [
             self.create_button(
-                self.apps[0].name,
+                self.apps[0],
                 (self.width // 2, self.height // 2 + 75),
                 button_width,
                 button_height,
             ),
             self.create_button(
-                self.apps[1].name,
+                self.apps[1],
                 (self.width // 2, self.height // 2 - 75),
                 button_width,
                 button_height,
             ),
         ]
         self.shutdown_label = pyglet.text.Label(
-            "Shutting down in 10s...Press red to stop shutdown.",
+            "Shutting down in 10s...Press red button or S on keyboard to stop shutdown.",
             font_name="Arial",
             font_size=24,
             x=0,
@@ -49,6 +55,13 @@ class App(DefaultPygletApp):
         )
         self.selected_mode = 0
         self.select_mode(0)
+
+        self.shutdown_timer = None
+        pyglet.clock.schedule_interval(self.update_all, 1 / 60)
+        pyglet.app.run()
+
+    def update_all(self, delta_time):
+        self.controller_input.update()
 
     def create_button(self, label, position, width, height):
         button = pyglet.shapes.BorderedRectangle(
@@ -80,11 +93,23 @@ class App(DefaultPygletApp):
         elif symbol == pyglet.window.key.ENTER:
             self.on_enter()
         elif symbol == pyglet.window.key.ESCAPE:
-            self.exit()
+            pyglet.app.exit()
+        elif symbol == pyglet.window.key.S:
+            self.handle_shutdown()
+
+    def handle_shutdown(self, cancel_shutdown_only=False):
+        if self.shutdown_timer is not None:
+            self.shutdown_timer.cancel()
+            self.shutdown_timer = None
+        elif not cancel_shutdown_only:
+            self.shutdown_timer = Timer(10, lambda: system("shutdown now"))
+            self.shutdown_timer.start()
 
     def on_controller_event(self, event):
         event_handlers = {
-            ControllerEvent.GREEN_SINGLE_CLICK: lambda: self.select_mode(1)
+            ControllerEvent.GREEN_SINGLE_CLICK: lambda: self.select_mode(1),
+            ControllerEvent.RED_SINGLE_LONG_CLICK: self.handle_shutdown,
+            ControllerEvent.RED_SINGLE_CLICK: lambda: self.handle_shutdown(True),
         }
         if event in event_handlers:
             event_handlers[event]()
@@ -106,9 +131,8 @@ class App(DefaultPygletApp):
 
     def on_enter(self):
         if self.selected_mode is not None:
-            print(f"Selected Game Mode: Mode {self.apps[self.selected_mode]}")
-            self.open_app(self.apps[self.selected_mode])
-            self.exit()
+            print(self.apps[self.selected_mode])
+            pyglet.app.exit()
 
     def on_draw(self):
         pyglet.gl.glFlush()
@@ -117,3 +141,10 @@ class App(DefaultPygletApp):
         for button in self.buttons:
             button.draw()
             button.label.draw()
+        if self.shutdown_timer is not None:
+            self.shutdown_label.draw()
+
+
+if __name__ == "__main__":
+    default_config = pyglet.gl.Config(sample_buffers=1, samples=8, double_buffer=True)
+    App(sys.argv[1:], caption="Game Selector", fullscreen=True, config=default_config)

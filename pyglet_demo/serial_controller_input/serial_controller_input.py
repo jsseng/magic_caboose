@@ -1,7 +1,7 @@
 import serial
 import struct
-import sys
-from os import system
+from sys import platform, stderr
+from socket import gethostname
 from enum import Enum
 
 BAUD_RATE = 115_200
@@ -41,7 +41,12 @@ class ControllerEvent(Enum):
 
 class ControllerInput:
     def __init__(self, on_controller_event=None, on_battery_change=None):
-        self.ser = serial.Serial(DEV_FILE, BAUD_RATE, timeout=0)
+        if platform != "darwin" and gethostname() == "ubuntu":
+            self.ser = serial.Serial(DEV_FILE, BAUD_RATE, timeout=0)
+            print("Controller connected", file=stderr)
+        else:
+            self.ser = None
+            print("Controller not detected", file=stderr)
         self.on_controller_event = self._check_and_call(on_controller_event)
         self.on_battery_change = self._check_and_call(on_battery_change)
 
@@ -51,6 +56,8 @@ class ControllerInput:
         return lambda *args: None
 
     def update(self):
+        if self.ser is None:
+            return
         data = self.ser.read(self.ser.in_waiting)
         if len(data) > 0:
             print(data, data[-1], len(data))
