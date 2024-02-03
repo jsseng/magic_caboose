@@ -1,5 +1,7 @@
 import subprocess
 import os
+import sys
+import pathlib
 
 APPS = {
     "Magic Caboose": ["env/bin/python3", "magic_caboose/magic_caboose.py"],
@@ -14,10 +16,13 @@ def main():
     while next_app is not None:
         if next_app == "App Selector":
             print("App Selector launched", file=log_file)
-            app_selector_cmd = ["env/bin/python3", "app_selector/app_selector.py"]
+            project_root_path = str(pathlib.Path(__file__).parent)
+            app_selector_cmd = [
+                f"{project_root_path}/env/bin/python3",
+                "app_selector/app_selector.py",
+            ]
             app_selector_cmd.extend(list(APPS.keys()))
             process = subprocess.run(app_selector_cmd, capture_output=True)
-            print(process)
             print("App Selector exited", file=log_file)
             process_stdout = str(process.stdout, encoding="utf-8").strip().split("\n")
             if len(process_stdout) < 0 or process_stdout[-1] not in APPS:
