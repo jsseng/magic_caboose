@@ -60,7 +60,7 @@ class ControllerInput:
             return
         data = self.ser.read(self.ser.in_waiting)
         if len(data) > 0:
-            print(data, data[-1], len(data))
+            # print(data, data[-1], len(data))
             last_byte = data[-1]
         if len(data) == 1:
             self.on_controller_event(ControllerEvent(last_byte))
@@ -73,4 +73,5 @@ class ControllerInput:
         if self.ser is None:
             return
         else:
+            print("Disconnected Controller")
             self.ser.close()
