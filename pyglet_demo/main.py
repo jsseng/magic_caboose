@@ -3,10 +3,22 @@ import os
 import sys
 import pathlib
 
+project_root_path = str(pathlib.Path(__file__).parent)
 APPS = {
-    "Magic Caboose": ["env/bin/python3", "magic_caboose/magic_caboose.py"],
-    "Example App": ["env/bin/python3", "example_app/example_app.py"],
+    "Magic Caboose": [
+        f"{project_root_path}/env/bin/python3",
+        f"{project_root_path}/magic_caboose/magic_caboose.py",
+    ],
+    "Example App": [
+        f"{project_root_path}/env/bin/python3",
+        f"{project_root_path}/example_app/example_app.py",
+    ],
 }
+
+APP_SELECTOR_CMD = [
+    f"{project_root_path}/env/bin/python3",
+    f"{project_root_path}/app_selector/app_selector.py",
+]
 
 
 def main():
@@ -16,13 +28,8 @@ def main():
     while next_app is not None:
         if next_app == "App Selector":
             print("App Selector launched", file=log_file)
-            project_root_path = str(pathlib.Path(__file__).parent)
-            app_selector_cmd = [
-                f"{project_root_path}/env/bin/python3",
-                "app_selector/app_selector.py",
-            ]
-            app_selector_cmd.extend(list(APPS.keys()))
-            process = subprocess.run(app_selector_cmd, capture_output=True)
+            APP_SELECTOR_CMD.extend(list(APPS.keys()))
+            process = subprocess.run(APP_SELECTOR_CMD, capture_output=True)
             print("App Selector exited", file=log_file)
             process_stdout = str(process.stdout, encoding="utf-8").strip().split("\n")
             if len(process_stdout) < 0 or process_stdout[-1] not in APPS:
