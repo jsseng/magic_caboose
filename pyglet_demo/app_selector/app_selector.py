@@ -144,10 +144,14 @@ class App(pyglet.window.Window):
         if self.shutdown_timer is not None:
             self.shutdown_label.draw()
 
-    def exit(self, selected_app):
+    def on_close(self):
+        print("called on close")
         self.controller_input.close()
-        print(selected_app)
         pyglet.app.exit()
+
+    def exit(self, selected_app=""):
+        self.on_close()
+        print(selected_app)
 
 
 if __name__ == "__main__":

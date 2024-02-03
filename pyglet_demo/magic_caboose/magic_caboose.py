@@ -299,9 +299,12 @@ class App(pyglet.window.Window):
 
         self.prev_segment = current_segment
 
-    def exit(self):
+    def on_close(self):
         self.controller_input.close()
         pyglet.app.exit()
+
+    def exit(self):
+        self.on_close()
 
 
 if __name__ == "__main__":

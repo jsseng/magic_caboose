@@ -22,8 +22,9 @@ APP_SELECTOR_CMD = [
 
 
 def main():
-    log_file_path = os.path.expanduser("~/main.log")
-    log_file = open(log_file_path, "w")
+    # log_file_path = os.path.expanduser("~/main.log")
+    # log_file = open(log_file_path, "w")
+    log_file = sys.stdout
     next_app = "App Selector"
     while next_app is not None:
         if next_app == "App Selector":
@@ -32,6 +33,7 @@ def main():
             process = subprocess.run(APP_SELECTOR_CMD, capture_output=True)
             print("App Selector exited", file=log_file)
             process_stdout = str(process.stdout, encoding="utf-8").strip().split("\n")
+            # print(process_stdout)
             if len(process_stdout) < 0 or process_stdout[-1] not in APPS:
                 break
             else:
