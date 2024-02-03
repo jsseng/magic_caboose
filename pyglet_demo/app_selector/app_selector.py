@@ -132,8 +132,7 @@ class App(pyglet.window.Window):
 
     def on_enter(self):
         if self.selected_mode is not None:
-            print(self.apps[self.selected_mode])
-            self.exit()
+            self.exit(self.apps[self.selected_mode])
 
     def on_draw(self):
         pyglet.gl.glFlush()
@@ -145,8 +144,9 @@ class App(pyglet.window.Window):
         if self.shutdown_timer is not None:
             self.shutdown_label.draw()
 
-    def exit(self):
+    def exit(self, selected_app):
         self.controller_input.close()
+        print(selected_app)
         pyglet.app.exit()
 
 
