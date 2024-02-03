@@ -225,6 +225,7 @@ class App(pyglet.window.Window):
     def on_controller_event(self, event):
         event_handlers_dict = {
             ControllerEvent.GREEN_SINGLE_CLICK: self.spin,
+            ControllerEvent.RED_SINGLE_LONG_CLICK: self.exit(),
         }
         if event in event_handlers_dict:
             event_handlers_dict[event]()
