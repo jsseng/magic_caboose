@@ -12,7 +12,6 @@ class App(pyglet.window.Window):
     name = "App Selector"
 
     def __init__(self, apps, *args, **kwargs):
-        print("App Selector launched")
         super().__init__(*args, **kwargs)
         pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
         self.controller_input = ControllerInput(self.on_controller_event)
@@ -147,7 +146,6 @@ class App(pyglet.window.Window):
             self.shutdown_label.draw()
 
     def exit(self):
-        print("App Selector exiting...")
         self.controller_input.close()
         pyglet.app.exit()
 

@@ -33,7 +33,6 @@ class App(pyglet.window.Window):
     name = "Magic Caboose"
 
     def __init__(self, *args, **kwargs):
-        print("Magic Caboose launched")
         super().__init__(*args, **kwargs)
         pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
 
@@ -301,7 +300,6 @@ class App(pyglet.window.Window):
         self.prev_segment = current_segment
 
     def exit(self):
-        print("Magic Caboose exiting...")
         self.controller_input.close()
         pyglet.app.exit()
 

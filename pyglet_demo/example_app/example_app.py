@@ -8,7 +8,6 @@ from serial_controller_input import ControllerEvent, ControllerInput  # noqa: E4
 
 class App(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
-        print("Example App launched")
         super().__init__(*args, **kwargs)
         self.controller_input = ControllerInput(self.on_controller_event)
         pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
@@ -41,7 +40,6 @@ class App(pyglet.window.Window):
         self.label.draw()
 
     def exit(self):
-        print("Example App exiting...")
         self.controller_input.close()
         pyglet.app.exit()
 
