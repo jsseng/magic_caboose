@@ -68,3 +68,9 @@ class ControllerInput:
             if data[0] == ControllerEvent.BATTERY_UPDATE.value:
                 [battery_level] = struct.unpack("f", data[1:])
                 self.on_battery_change(battery_level)
+
+    def close(self):
+        if self.ser is None:
+            return
+        else:
+            self.ser.close()

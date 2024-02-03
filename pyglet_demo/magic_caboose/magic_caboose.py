@@ -298,6 +298,10 @@ class App(pyglet.window.Window):
 
         self.prev_segment = current_segment
 
+    def exit(self):
+        self.controller_input.close()
+        pyglet.app.exit()
+
 
 if __name__ == "__main__":
     default_config = pyglet.gl.Config(sample_buffers=1, samples=8, double_buffer=True)

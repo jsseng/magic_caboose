@@ -93,7 +93,7 @@ class App(pyglet.window.Window):
         elif symbol == pyglet.window.key.ENTER:
             self.on_enter()
         elif symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
+            self.exit()
         elif symbol == pyglet.window.key.S:
             self.handle_shutdown()
 
@@ -108,6 +108,7 @@ class App(pyglet.window.Window):
     def on_controller_event(self, event):
         event_handlers = {
             ControllerEvent.GREEN_SINGLE_CLICK: lambda: self.select_mode(1),
+            ControllerEvent.GREEN_SINGLE_LONG_CLICK: self.on_enter,
             ControllerEvent.RED_SINGLE_LONG_CLICK: self.handle_shutdown,
             ControllerEvent.RED_SINGLE_CLICK: lambda: self.handle_shutdown(True),
         }
@@ -132,7 +133,7 @@ class App(pyglet.window.Window):
     def on_enter(self):
         if self.selected_mode is not None:
             print(self.apps[self.selected_mode])
-            pyglet.app.exit()
+            self.exit()
 
     def on_draw(self):
         pyglet.gl.glFlush()
@@ -143,6 +144,10 @@ class App(pyglet.window.Window):
             button.label.draw()
         if self.shutdown_timer is not None:
             self.shutdown_label.draw()
+
+    def exit(self):
+        self.controller_input.close()
+        pyglet.app.exit()
 
 
 if __name__ == "__main__":

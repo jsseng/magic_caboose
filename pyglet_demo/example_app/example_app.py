@@ -30,14 +30,18 @@ class App(pyglet.window.Window):
     def update_all(self, delta_time):
         self.controller_input.update()
 
-    def on_controller_event(event):
+    def on_controller_event(self, event):
         if event == ControllerEvent.RED_SINGLE_CLICK:
-            pyglet.app.exit()
+            self.exit()
 
     def on_draw(self):
         pyglet.gl.glFlush()
         self.clear()
         self.label.draw()
+
+    def exit(self):
+        self.controller_input.close()
+        pyglet.app.exit()
 
 
 if __name__ == "__main__":
