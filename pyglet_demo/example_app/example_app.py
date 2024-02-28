@@ -40,7 +40,6 @@ class App(pyglet.window.Window):
         self.label.draw()
 
     def on_close(self):
-        self.controller_input.close()
         pyglet.app.exit()
 
     def exit(self):

@@ -28,6 +28,7 @@ class App(pyglet.window.Window):
             anchor_y="center",
         )
         button_width, button_height = 400, 100
+        # TODO: create this array dynamically
         self.buttons = [
             self.create_button(
                 self.apps[0],
@@ -146,7 +147,7 @@ class App(pyglet.window.Window):
 
     def on_close(self):
         print("called on close")
-        self.controller_input.close()
+        # self.controller_input.close()
         pyglet.app.exit()
 
     def exit(self, selected_app=""):
