@@ -30,7 +30,7 @@ class App(pyglet.window.Window):
     def update_all(self, delta_time):
         self.controller_input.update()
 
-    def on_controller_event(self, event):
+    def on_controller_event(self, event, **kwargs):
         if event == ControllerEvent.RED_SINGLE_CLICK:
             self.exit()
 

@@ -23,25 +23,29 @@ class App(pyglet.window.Window):
             font_name="Arial",
             font_size=64,
             x=self.width // 2,
-            y=self.height - 100,
+            y=self.height - 140,
             anchor_x="center",
-            anchor_y="center",
+            anchor_y="bottom",
         )
-        button_width, button_height = 400, 100
+        # self.apps = [str(i) for i in range(7)]
+        button_width, button_height, button_sep, button_midpt_shift = 400, 100, 30, -100
+        button_start_height = (self.height + button_midpt_shift) // 2 + len(
+            self.apps
+        ) // 2 * (button_height + button_sep)
+        if len(self.apps) % 2 == 0:
+            button_start_height -= button_sep // 2 + button_height // 2
         # TODO: create this array dynamically
         self.buttons = [
             self.create_button(
-                self.apps[0],
-                (self.width // 2, self.height // 2 + 75),
+                app,
+                (
+                    self.width // 2,
+                    button_start_height - i * (button_height + button_sep),
+                ),
                 button_width,
                 button_height,
-            ),
-            self.create_button(
-                self.apps[1],
-                (self.width // 2, self.height // 2 - 75),
-                button_width,
-                button_height,
-            ),
+            )
+            for i, app in enumerate(apps)
         ]
         self.shutdown_label = pyglet.text.Label(
             "Shutting down in 10s...Press red button or S on keyboard to stop shutdown.",
@@ -106,7 +110,7 @@ class App(pyglet.window.Window):
             self.shutdown_timer = Timer(10, lambda: system("shutdown now"))
             self.shutdown_timer.start()
 
-    def on_controller_event(self, event):
+    def on_controller_event(self, event, **kwargs):
         event_handlers = {
             ControllerEvent.GREEN_SINGLE_CLICK: lambda: self.select_mode(1),
             ControllerEvent.GREEN_SINGLE_LONG_CLICK: self.on_enter,

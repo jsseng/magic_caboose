@@ -222,9 +222,12 @@ class App(pyglet.window.Window):
     def on_mouse_press(self, x, y, button, modifiers):
         self.spin()
 
-    def on_controller_event(self, event):
+    def on_controller_event(self, event, **kwargs):
         event_handlers_dict = {
             ControllerEvent.GREEN_SINGLE_CLICK: self.spin,
+            ControllerEvent.ACCL_UPDATE: lambda: (
+                self.spin() if abs(kwargs["accel_z"]) > 70 else None
+            ),
             ControllerEvent.RED_SINGLE_LONG_CLICK: self.exit,
         }
         if event in event_handlers_dict:

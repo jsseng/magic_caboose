@@ -17,7 +17,7 @@ APPS = {
 APP_SELECTOR_CMD = [
     f"{project_root_path}/env/bin/python3",
     f"{project_root_path}/app_selector/app_selector.py",
-]
+] + list(APPS.keys())
 
 
 def main():
@@ -28,7 +28,6 @@ def main():
     while next_app is not None:
         if next_app == "App Selector":
             print("App Selector launched", file=log_file)
-            APP_SELECTOR_CMD.extend(list(APPS.keys()))
             process = subprocess.run(APP_SELECTOR_CMD, capture_output=True)
             print("App Selector exited", file=log_file)
             process_stdout = str(process.stdout, encoding="utf-8").strip().split("\n")

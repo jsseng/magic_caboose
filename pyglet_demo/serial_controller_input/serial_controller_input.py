@@ -79,7 +79,7 @@ class ControllerInput:
         self._on_controller_event = self._check_and_call(on_controller_event)
         self._on_battery_change = self._check_and_call(on_battery_change)
 
-        atexit.register(self.close)
+        atexit.register(self._close)
 
     def _check_and_call(self, callback):
         if callback is not None:
@@ -103,19 +103,24 @@ class ControllerInput:
             if data[0] == ControllerEvent.BATTERY_UPDATE.value:
                 [battery_level] = struct.unpack("f", data[1:])
                 self._on_battery_change(battery_level)
-        elif len(data) == 4:
+        elif len(data) == 7:
             if data[0] == ControllerEvent.ACCL_UPDATE.value:
-                accel_x, accel_y, accel_z = struct.unpack("bbb", data[1:4])
+                accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = struct.unpack(
+                    "bbbbbb", data[1:7]
+                )
                 self._on_controller_event(
                     ControllerEvent.ACCL_UPDATE,
                     **{
                         "accel_x": accel_x,
                         "accel_y": accel_y,
                         "accel_z": accel_z,
+                        "gyro_x": gyro_x,
+                        "gryo_y": gyro_y,
+                        "gyro_z": gyro_z,
                     },
                 )
 
-    def close(self):
+    def _close(self):
         if self.ser is None:
             return
         else:
