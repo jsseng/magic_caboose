@@ -93,32 +93,50 @@ class ControllerInput:
         if self.ser is None:
             return
         data = self.ser.read(self.ser.in_waiting)
-        if len(data) > 0:
-            # print(data, data[-1], len(data))
-            last_byte = data[-1]
-        if len(data) == 1:
-            # print(ControllerEvent(last_byte).name)
-            self._on_controller_event(ControllerEvent(last_byte))
-        elif len(data) == 5:
-            if data[0] == ControllerEvent.BATTERY_UPDATE.value:
-                [battery_level] = struct.unpack("f", data[1:])
-                self._on_battery_change(battery_level)
-        elif len(data) == 7:
-            if data[0] == ControllerEvent.ACCL_UPDATE.value:
-                accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = struct.unpack(
-                    "bbbbbb", data[1:7]
-                )
-                self._on_controller_event(
-                    ControllerEvent.ACCL_UPDATE,
-                    **{
-                        "accel_x": accel_x,
-                        "accel_y": accel_y,
-                        "accel_z": accel_z,
-                        "gyro_x": gyro_x,
-                        "gryo_y": gyro_y,
-                        "gyro_z": gyro_z,
-                    },
-                )
+        cur_start_idx = 0
+        while cur_start_idx < len(data):
+            flag = data[cur_start_idx]
+            # check most significant bit of flag
+            if flag & 0x80 == 0:
+                # button packet
+                self._on_controller_event(ControllerEvent(flag))
+                cur_start_idx += 1
+            else:
+                if flag == ControllerEvent.BATTERY_UPDATE.value:
+                    # we got battery flag
+                    if len(data) - cur_start_idx < 5:
+                        # but packet was less than expected 5 bytes
+                        # ignore packet
+                        print("Received bad battery packet", file=stderr)
+                        break
+                    [battery_level] = struct.unpack(
+                        "f", data[cur_start_idx + 1 : cur_start_idx + 5]
+                    )
+                    self._on_battery_change(battery_level)
+                    cur_start_idx += 5  # advance 5 bytes
+                elif flag == ControllerEvent.ACCL_UPDATE.value:
+                    if len(data) - cur_start_idx < 7:
+                        # but packet was less than expected 7 bytes
+                        # ignore packet
+                        print("Received bad accel packet", file=stderr)
+                        break
+                    accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z = struct.unpack(
+                        "bbbbbb", data[cur_start_idx + 1 : cur_start_idx + 7]
+                    )
+                    self._on_controller_event(
+                        ControllerEvent.ACCL_UPDATE,
+                        **{
+                            "accel_x": accel_x,
+                            "accel_y": accel_y,
+                            "accel_z": accel_z,
+                            "gyro_x": gyro_x,
+                            "gryo_y": gyro_y,
+                            "gyro_z": gyro_z,
+                        },
+                    )
+                    cur_start_idx += 7  # advance 7 bytes
+                else:
+                    print("Received bad packet", file=stderr)
 
     def _close(self):
         if self.ser is None:
