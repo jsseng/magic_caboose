@@ -1,87 +1,46 @@
-import pyglet
-from sys import platform
-from os import system
-from socket import gethostname
+import subprocess
+import sys
+import pathlib
 
-from threading import Timer
+project_root_path = str(pathlib.Path(__file__).parent)
+APPS = {
+    "Magic Caboose": [
+        f"{project_root_path}/env/bin/python3",
+        f"{project_root_path}/magic_caboose/magic_caboose.py",
+    ],
+    "Example App": [
+        f"{project_root_path}/env/bin/python3",
+        f"{project_root_path}/example_app/example_app.py",
+    ],
+}
 
-
-import configs
-import app
-import serialInput
+APP_SELECTOR_CMD = [
+    f"{project_root_path}/env/bin/python3",
+    f"{project_root_path}/app_selector/app_selector.py",
+] + list(APPS.keys())
 
 
 def main():
-    gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
-
-    config = pyglet.gl.Config(sample_buffers=1, samples=8, double_buffer=True)
-    window = pyglet.window.Window(
-        caption="Caboose Wheel", config=config, fullscreen=True
-    )
-    pyglet.gl.glClearColor(*gl_background_color, 1.0)
-    pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
-
-    game_app = app.App((window.width, window.height))
-
-    shut_down_timer = None
-
-    shutdown_label = pyglet.text.Label(
-        "Shutting down in 10s...Press red to stop shutdown.",
-        font_name="Arial",
-        font_size=24,
-        x=0,
-        y=window.height,
-        anchor_x="left",
-        # anchor_y="bottom",
-        anchor_y="top",
-        color=(255, 0, 0, 255),
-    )
-
-    @window.event
-    def on_draw():
-        pyglet.gl.glFlush()
-        window.clear()
-
-        game_app.on_draw()
-        if shut_down_timer is not None:
-            shutdown_label.draw()
-
-    @window.event
-    def on_mouse_press(x, y, button, modifiers):
-        if button == 2:
-            handle_shutdown()
-        elif button == 4:
-            pyglet.app.exit()
+    # log_file_path = os.path.expanduser("~/main.log")
+    # log_file = open(log_file_path, "w")
+    log_file = sys.stdout
+    next_app = "App Selector"
+    while next_app is not None:
+        if next_app == "App Selector":
+            print("App Selector launched", file=log_file)
+            process = subprocess.run(APP_SELECTOR_CMD, capture_output=True)
+            print("App Selector exited", file=log_file)
+            process_stdout = str(process.stdout, encoding="utf-8").strip().split("\n")
+            # print(process_stdout)
+            if len(process_stdout) < 0 or process_stdout[-1] not in APPS:
+                break
+            else:
+                next_app = process_stdout[-1]
         else:
-            game_app.on_click(x, y, button)
-
-    def handle_shutdown(cancel_shutdown_only=False):
-        nonlocal shut_down_timer
-        if shut_down_timer is not None:
-            shut_down_timer.cancel()
-            shut_down_timer = None
-        elif not cancel_shutdown_only:
-            shut_down_timer = Timer(10, lambda: system("shutdown now"))
-            shut_down_timer.start()
-
-    # dev board will need to be changed. not sure of the name in debian
-    if platform != "darwin" and gethostname() == "ubuntu":
-        serialInputHandler = serialInput.Input(
-            on_green_trigger=game_app.spin,
-            on_red_trigger=lambda: handle_shutdown(cancel_shutdown_only=True),
-            on_green_hold=pyglet.app.exit,
-            on_red_hold=handle_shutdown,
-        )
-    else:
-        serialInputHandler = None
-
-    def update_all(deltaTime):
-        if serialInputHandler is not None:
-            serialInputHandler.update()
-        game_app.on_update(deltaTime)
-
-    pyglet.clock.schedule_interval(update_all, 1 / 60)
-    pyglet.app.run()
+            print(f"{next_app} launched", file=log_file)
+            process = subprocess.run(APPS[next_app])
+            next_app = "App Selector"
+            print(f"{next_app} exited", file=log_file)
 
 
 if __name__ == "__main__":

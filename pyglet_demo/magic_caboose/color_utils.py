@@ -4,6 +4,7 @@ import random
 PHASE_1 = math.tau / 3
 PHASE_2 = math.tau / 1.5
 
+
 def color_phase(theta):
     h = theta / math.tau
     i = int(h * 6)
@@ -22,9 +23,11 @@ def color_phase(theta):
     else:
         return (1, 0, 1 - f)
 
+
 def color_phase_int(theta):
     color = color_phase(theta)
     return tuple(map(lambda v: int(v * 255), color))
+
 
 def random_color():
     return color_phase(random.random() * math.tau)

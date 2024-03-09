@@ -3,15 +3,16 @@ import math
 import os
 import pathlib
 
+import sys
 
-from . import color_utils
-from . import configs
-from typing import Tuple
+import configs
+import color_utils
 import random
 
-from serial_controller_input import ControllerEvent
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
 
-from default_app import DefaultApp
+from serial_controller_input import ControllerEvent, ControllerInput  # noqa: E402
+
 
 # Physics values
 SPIN_SPEED = 0.04
@@ -28,9 +29,19 @@ MID_RADIUS = (INNER_RADIUS + OUTER_RADIUS) / 2
 CULLING_THRESHOLD = 0.3
 
 
-class App(DefaultApp):
-    def __init__(self, window_size: Tuple[int, int]):
+class App(pyglet.window.Window):
+    name = "Magic Caboose"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        pyglet.options["audio"] = ("openal", "pulse", "directsound", "silent")
+
+        self.controller_input = ControllerInput(self.on_controller_event)
+        gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
+        pyglet.gl.glClearColor(*gl_background_color, 1.0)
+
         self.wheel_batch = pyglet.graphics.Batch()
+        window_size = (self.width, self.height)
         self.window_size = window_size
 
         image_files = os.listdir(
@@ -47,8 +58,7 @@ class App(DefaultApp):
         image_files = sorted(image_files)
 
         images = [
-            pyglet.resource.image(f"magic_caboose/images/{image_file}")
-            for image_file in image_files
+            pyglet.resource.image(f"images/{image_file}") for image_file in image_files
         ]
 
         ordered_image_indexes = self.order_images(images)
@@ -81,7 +91,7 @@ class App(DefaultApp):
             sprite = pyglet.sprite.Sprite(image)
 
             self.audio_file_name.append(
-                f"magic_caboose/sounds/{image_files[i].replace('.png', '.wav')}"
+                f"sounds/{image_files[i].replace('.png', '.wav')}"
             )
 
             sprite.scale = 0.4
@@ -120,7 +130,7 @@ class App(DefaultApp):
         self.wheel_position = 0
         self.prev_segment = 0
 
-        self.audio = pyglet.resource.media("magic_caboose/sounds/click4.wav")
+        self.audio = pyglet.resource.media("sounds/click4.wav")
         self.player = None
         self.player2 = None
 
@@ -136,9 +146,12 @@ class App(DefaultApp):
             color=(0, 0, 0, 255),
         )
 
-    def on_startup(self):
-        gl_background_color = tuple(map(lambda x: x / 255.0, configs.BACKGROUND_COLOR))
-        pyglet.gl.glClearColor(*gl_background_color, 1.0)
+        pyglet.clock.schedule_interval(self.update_all, 1 / 60)
+        pyglet.app.run()
+
+    def update_all(self, delta_time):
+        self.controller_input.update()
+        self.on_update(delta_time)
 
     def check_position(self, image, x, y):
         img_data = image.get_region(x, y, 1, 1).get_image_data()
@@ -179,6 +192,8 @@ class App(DefaultApp):
         return ordered_images
 
     def on_draw(self):
+        pyglet.gl.glFlush()
+        self.clear()
         # self.wheel_batch.draw()
         for sector, sprite in self.arcs:
             angle_val = (self.angle_offset + sector.start_angle) % math.tau
@@ -204,12 +219,16 @@ class App(DefaultApp):
         self.label.draw()
         self.arrow_batch.draw()
 
-    def on_click(self, x, y, button):
+    def on_mouse_press(self, x, y, button, modifiers):
         self.spin()
 
-    def on_controller_event(self, event):
+    def on_controller_event(self, event, **kwargs):
         event_handlers_dict = {
             ControllerEvent.GREEN_SINGLE_CLICK: self.spin,
+            ControllerEvent.ACCL_UPDATE: lambda: (
+                self.spin() if abs(kwargs["accel_z"]) > 70 else None
+            ),
+            ControllerEvent.RED_SINGLE_LONG_CLICK: self.exit,
         }
         if event in event_handlers_dict:
             event_handlers_dict[event]()
@@ -282,3 +301,14 @@ class App(DefaultApp):
             # self.player2 = pyglet.resource.media("sounds/output.wav").play()
 
         self.prev_segment = current_segment
+
+    def on_close(self):
+        pyglet.app.exit()
+
+    def exit(self):
+        self.on_close()
+
+
+if __name__ == "__main__":
+    default_config = pyglet.gl.Config(sample_buffers=1, samples=8, double_buffer=True)
+    App(caption="Magic Caboose", fullscreen=True, config=default_config)
