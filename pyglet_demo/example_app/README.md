@@ -1,0 +1,1 @@
+just an example_app which serves as an example of how to make a pyglet app and how to interact with the controller.
